@@ -49,6 +49,16 @@ async function run() {
       res.send(result);
     });
 
+    // delete user
+    app.delete("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = {
+        _id: new ObjectId(id),
+      };
+      const result = await userCollection.deleteOne(filter);
+      res.send(result);
+    });
+
     // get menu
     app.get("/menu", async (req, res) => {
       const result = await menuCollection.find().toArray();
