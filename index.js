@@ -30,7 +30,7 @@ const verifyToken = (req, res, next) => {
     }
 
     req.decoded = decoded;
-    
+
     next();
   });
 };
@@ -109,6 +109,29 @@ async function run() {
       };
       const result = await userCollection.updateOne(filter, updatedDoc);
       res.send(result);
+    });
+
+    // verify admin
+    app.get("/users/admin/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+
+      console.log(email);
+      console.log(req.decoded.email);
+
+      if (email !== req.decoded.email) {
+        res.status(403).send({ message: "Forbidden" });
+      }
+
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+
+      let admin = false;
+
+      if (user?.role === "admin") {
+        admin = true;
+      }
+
+      res.send({ admin });
     });
 
     // get menu
