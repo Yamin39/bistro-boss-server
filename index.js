@@ -247,7 +247,7 @@ async function run() {
     });
 
     // get admin states
-    app.get("/admin-states", verifyAdmin, verifyToken, async (req, res) => {
+    app.get("/admin-states", verifyToken, verifyAdmin, async (req, res) => {
       const userCount = await userCollection.estimatedDocumentCount();
       const menuItemCount = await menuCollection.estimatedDocumentCount();
       const orderCount = await paymentCollection.estimatedDocumentCount();
