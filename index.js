@@ -279,6 +279,75 @@ async function run() {
       });
     });
 
+    // get order stats using aggregate pipelines
+    app.get("/order-stats", verifyToken, verifyAdmin, async (req, res) => {
+      const result = await paymentCollection
+        .aggregate([
+          /*
+          i. $unwind deconstructs the menuItemId array in the payments collection.
+          ii. $unwind creates separate document for each element in the array.
+          */
+          {
+            $unwind: "$menuItemId",
+          },
+
+          /**
+           * The code below converts the menuItemId string to an ObjectId and add a new field to each doc called menuItemIdObject
+           */
+          {
+            $addFields: {
+              menuItemIdObject: { $toObjectId: "$menuItemId" },
+            },
+          },
+
+          /**
+           * The $lookup stage uses the newly added "menuItemIdObject" field to match the "_id" field in the menu collection.
+           */
+          {
+            $lookup: {
+              from: "menu",
+              localField: "menuItemIdObject",
+              foreignField: "_id",
+              as: "menuItems",
+            },
+          },
+
+          /**
+           * The code below deconstructs the menuItems array [The array that the lookup returns in each doc]
+           */
+          {
+            $unwind: "$menuItems",
+          },
+
+          /**
+           * $group groups the documents by the category field from the menuItems array, summing up the quantity and revenue.
+           */
+          {
+            $group: {
+              _id: "$menuItems.category",
+              quantity: { $sum: 1 },
+              revenue: { $sum: "$menuItems.price" },
+            },
+          },
+
+          /**
+           * $project renames _id with category
+           * we don't need _id thats why its value i 0
+           */
+          {
+            $project: {
+              _id: 0,
+              category: "$_id",
+              quantity: "$quantity",
+              revenue: "$revenue",
+            },
+          },
+        ])
+        .toArray();
+
+      res.send(result);
+    });
+
     // get payment history for specific user
     app.get("/payments/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
