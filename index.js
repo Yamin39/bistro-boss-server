@@ -160,6 +160,16 @@ async function run() {
       res.send(result);
     });
 
+    // delete menu
+    app.delete("/menu/:id", verifyToken, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const filter = {
+        _id: new ObjectId(id),
+      };
+      const result = await menuCollection.deleteOne(filter);
+      res.send(result);
+    });
+
     // get reviews
     app.get("/reviews", async (req, res) => {
       const result = await reviewCollection.find().toArray();
