@@ -246,6 +246,20 @@ async function run() {
       });
     });
 
+    // get payment history for specific user
+    app.get("/payments/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+
+      if (email !== req.decoded.email) {
+        res.status(403).send({ message: "Forbidden" });
+      }
+
+      const query = { email: email };
+      const result = await paymentCollection.find(query).toArray();
+
+      res.send(result);
+    });
+
     // save payments
     app.post("/payments", async (req, res) => {
       const payment = req.body;
