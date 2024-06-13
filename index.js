@@ -154,6 +154,12 @@ async function run() {
       res.send(result);
     });
 
+    // post menu
+    app.post("/menu", verifyToken, verifyAdmin, async (req, res) => {
+      const result = await menuCollection.insertOne(req.body);
+      res.send(result);
+    });
+
     // get reviews
     app.get("/reviews", async (req, res) => {
       const result = await reviewCollection.find().toArray();
