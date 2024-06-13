@@ -58,6 +58,7 @@ async function run() {
     const menuCollection = client.db("bistroDB").collection("menu");
     const reviewCollection = client.db("bistroDB").collection("review");
     const cartCollection = client.db("bistroDB").collection("cart");
+    const paymentCollection = client.db("bistroDB").collection("payments");
 
     // custom middleware to use verify admin after verifyToken
     const verifyAdmin = async (req, res, next) => {
@@ -243,6 +244,23 @@ async function run() {
       res.send({
         clientSecret: paymentIntent.client_secret,
       });
+    });
+
+    // save payments
+    app.post("/payments", async (req, res) => {
+      const payment = req.body;
+      const paymentResult = await paymentCollection.insertOne(payment);
+
+      // delete each item from the cart carefully
+      const query = {
+        _id: {
+          $in: payment.cartIds.map((id) => new ObjectId(id)),
+        },
+      };
+
+      const deleteResult = await cartCollection.deleteMany(query);
+
+      res.send({ paymentResult, deleteResult });
     });
 
     // Send a ping to confirm a successful connection
