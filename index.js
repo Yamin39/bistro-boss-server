@@ -154,6 +154,16 @@ async function run() {
       res.send(result);
     });
 
+    // get specific menu
+    app.get("/menu/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = {
+        _id: new ObjectId(id),
+      };
+      const result = await menuCollection.findOne(filter);
+      res.send(result);
+    });
+
     // post menu
     app.post("/menu", verifyToken, verifyAdmin, async (req, res) => {
       const result = await menuCollection.insertOne(req.body);
