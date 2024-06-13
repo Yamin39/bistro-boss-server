@@ -65,7 +65,7 @@ async function run() {
       const email = req.decoded?.email;
       const user = await userCollection.findOne({ email });
 
-      const isAdmin = user.role === "admin";
+      const isAdmin = user?.role === "admin";
 
       if (!isAdmin) {
         return res.status(403).send({ message: "Forbidden" });
@@ -243,6 +243,39 @@ async function run() {
 
       res.send({
         clientSecret: paymentIntent.client_secret,
+      });
+    });
+
+    // get admin states
+    app.get("/admin-states", verifyAdmin, verifyToken, async (req, res) => {
+      const userCount = await userCollection.estimatedDocumentCount();
+      const menuItemCount = await menuCollection.estimatedDocumentCount();
+      const orderCount = await paymentCollection.estimatedDocumentCount();
+
+      // this is not the best way
+      // const payments = await paymentCollection.find().toArray();
+      // const revenue = payments.reduce((total, payment) => total + payment.price, 0);
+
+      const result = await paymentCollection
+        .aggregate([
+          {
+            $group: {
+              _id: null,
+              totalRevenue: {
+                $sum: "$price",
+              },
+            },
+          },
+        ])
+        .toArray();
+
+      const revenue = result.length ? result[0].totalRevenue : 0;
+
+      res.send({
+        userCount,
+        menuItemCount,
+        orderCount,
+        revenue,
       });
     });
 
